@@ -405,7 +405,8 @@ function pickPacDir(e, col, row) {
 }
 
 /* ---- Ghost direction / AI ---- */
-const ALL_DIRS = [{ x: 0, y: -1 }, { x: 0, y: 1 }, { x: -1, y: 0 }, { x: 1, y: 0 }];
+// Order matters for tie-breaks: matches the original arcade priority (up, left, down, right).
+const ALL_DIRS = [{ x: 0, y: -1 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 0 }];
 
 function ghostBlocked(ghost, col, row) {
   const v = rawTile(col, row);
