@@ -22,6 +22,8 @@ const TRANSLATIONS = {
     pressStart: "ESPAÇO PARA COMEÇAR",
     pausedTitle: "PAUSA",
     pausedSub: "Prime P ou toca para retomar",
+    resumeBtn: "Retomar",
+    menuBtn: "Menu inicial",
     controlsHint: "⌨️ Setas ou WASD para mover · P para pausar",
     consoleHint: "💡 Dica: abre a consola do navegador para veres pistas de desenvolvimento.",
     footerBy: "Desenvolvido por",
@@ -61,6 +63,8 @@ const TRANSLATIONS = {
     pressStart: "SPACE TO START",
     pausedTitle: "PAUSED",
     pausedSub: "Press P or tap to resume",
+    resumeBtn: "Resume",
+    menuBtn: "Main Menu",
     controlsHint: "⌨️ Arrows or WASD to move · P to pause",
     consoleHint: "💡 Tip: open the browser console for developer hints.",
     footerBy: "Developed by",
@@ -840,6 +844,9 @@ function togglePause() {
   if (!state.running || state.over) return;
   if (state.paused) resumeGame(); else pauseGame();
 }
+function goToMenu() {
+  newGame(state.difficulty);
+}
 
 // Tracks which direction keys/buttons are currently held, in press order,
 // so releasing the most recent one correctly falls back to whichever
@@ -859,6 +866,12 @@ function releaseDir(id) {
   if (heldDirs.length > 0) {
     const last = heldDirs[heldDirs.length - 1];
     pacman.queuedDir = { x: last.x, y: last.y };
+  } else {
+    // No direction is held anymore: forget the queued turn instead of leaving it
+    // stuck pointing the way it last pointed. Otherwise a single tap-and-release
+    // keeps forcing Pac-Man to turn that way at every future intersection for the
+    // rest of the game, which can trap him circling the same small loop forever.
+    pacman.queuedDir = { x: 0, y: 0 };
   }
 }
 
@@ -905,6 +918,8 @@ bindDpad(el("btn-down"), 0, 1, "touch-down");
 bindDpad(el("btn-left"), -1, 0, "touch-left");
 bindDpad(el("btn-right"), 1, 0, "touch-right");
 el("btn-pause").addEventListener("click", (e) => { e.preventDefault(); togglePause(); });
+el("btn-resume").addEventListener("click", (e) => { e.stopPropagation(); resumeGame(); });
+el("btn-menu").addEventListener("click", (e) => { e.stopPropagation(); goToMenu(); });
 
 /* ==================== Update loop ==================== */
 function update(dt) {
