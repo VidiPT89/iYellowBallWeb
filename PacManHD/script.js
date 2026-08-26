@@ -85,9 +85,9 @@ const TRANSLATIONS = {
 };
 
 const DIFFICULTIES = {
-  easy: { lives: 4, ghostSpeedMul: 0.82, frightenedMs: 9000, releaseDelays: [150, 2200, 6000, 10000], extraLifeScore: 8000 },
-  normal: { lives: 3, ghostSpeedMul: 0.94, frightenedMs: 7000, releaseDelays: [150, 2000, 5500, 9000], extraLifeScore: 10000 },
-  hard: { lives: 2, ghostSpeedMul: 1.08, frightenedMs: 5000, releaseDelays: [150, 1200, 3800, 6500], extraLifeScore: 12000 },
+  easy: { lives: 4, pacSpeedMul: 0.85, ghostSpeedMul: 0.72, frightenedMs: 9000, releaseDelays: [150, 2200, 6000, 10000], extraLifeScore: 8000 },
+  normal: { lives: 3, pacSpeedMul: 0.95, ghostSpeedMul: 0.85, frightenedMs: 7000, releaseDelays: [150, 2000, 5500, 9000], extraLifeScore: 10000 },
+  hard: { lives: 2, pacSpeedMul: 1.05, ghostSpeedMul: 0.98, frightenedMs: 5000, releaseDelays: [150, 1200, 3800, 6500], extraLifeScore: 12000 },
 };
 
 const STORAGE_LANG = "pacmanhd:lang";
@@ -151,8 +151,8 @@ const PHASES = [
   { mode: "chase", dur: 999999 },
 ];
 
-const BASE_PAC_SPEED = 0.155; // px/ms
-const BASE_GHOST_SPEED = 0.135; // px/ms
+const BASE_PAC_SPEED = 0.130; // px/ms
+const BASE_GHOST_SPEED = 0.120; // px/ms
 const DEATH_ANIM_MS = 900;
 const READY_PAUSE_MS = 650;
 
@@ -937,7 +937,7 @@ function update(dt) {
     return;
   }
 
-  stepEntity(pacman, BASE_PAC_SPEED, dt, pickPacDir, handleDotConsumption);
+  stepEntity(pacman, BASE_PAC_SPEED * cfg.pacSpeedMul, dt, pickPacDir, handleDotConsumption);
   pacman.mouthPhase += (pacman.dir.x || pacman.dir.y) ? dt * 0.012 : 0;
 
   ghosts.forEach((g) => updateGhost(g, dt));
