@@ -73,8 +73,9 @@ test('Unsupported audio never prevents start', `audioCtx=null; tryStart(); state
 test('Autopilot clears level 1 and nobody walks through walls', `state.running=true; autopilot=true; let ok=true; for(let f=0; f<60*300 && state.level===1; f++){ update(16); if(isWall(ball.col,ball.row)||enemies.some(e=>isWall(e.col,e.row))) ok=false; } autopilot=false; state.level===2 && ok`);
 
 // iOS parity: the web generator must produce exactly the mazes the Swift app does.
-const swiftDir = `${__dirname}/../../iYellowBall/iYellowBall`;
-if (process.env.PARITY === '1' && existsSync(`${swiftDir}/MazeGenerator.swift`)) {
+// The web repo lives inside the iOS repo folder (iYellowBall/iYellowBallWeb).
+const swiftDir = [`${__dirname}/../../iYellowBall`, `${__dirname}/../../iYellowBall/iYellowBall`].find((d) => existsSync(`${d}/MazeGenerator.swift`)) || '';
+if (process.env.PARITY === '1' && swiftDir) {
   const os = require('node:os'); const path = require('node:path'); const fs = require('node:fs');
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'iyb-parity-'));
   fs.writeFileSync(`${dir}/main.swift`, 'for l in 1...5 { print(MazeGenerator.make(seed: MazeGenerator.seed(forLevel: l)).tiles.map(String.init).joined()) }\nprint(MazeGenerator.make(seed: MazeGenerator.seed(forLevel: 2, base: 20261120)).tiles.map(String.init).joined())\n');

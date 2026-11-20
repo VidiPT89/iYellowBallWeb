@@ -68,7 +68,7 @@ open index.html          # or serve it: python3 -m http.server
 
 ```bash
 node tests/gameplay.cjs            # 20 engine checks, no dependencies
-PARITY=1 node tests/gameplay.cjs   # also compares mazes with the Swift generator (needs swiftc and the iOS repo next to this one)
+PARITY=1 node tests/gameplay.cjs   # also compares mazes with the Swift generator (needs swiftc, with this repo cloned inside the iOS repo folder: `iYellowBall/iYellowBallWeb`)
 ```
 
 Optional browser tests need Playwright: `node tests/browser.cjs`, with `PLAYWRIGHT_MODULE` pointing at an installation and optionally `CHROMIUM_PATH` at a browser. They cover desktop and phone layouts, start/pause/menu, difficulty and daily mode, language, swipe steering and missing storage/audio.
