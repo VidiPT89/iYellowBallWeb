@@ -16,7 +16,6 @@
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<canvas id="bg-canvas"></canvas>
 
 <div class="app">
 
@@ -62,7 +61,6 @@
     </section>
 
     <section class="game-card" id="game-card">
-      <div class="game-card-glow"></div>
 
       <div class="stat-row">
         <div class="stat">
@@ -84,7 +82,7 @@
       </div>
 
       <div class="screen-frame">
-        <canvas id="game-canvas" width="560" height="560"></canvas>
+        <canvas tabindex="0" aria-label="Pac-Man" id="game-canvas" width="560" height="560"></canvas>
         <div class="scanlines" aria-hidden="true"></div>
 
         <div class="overlay-layer" id="start-overlay">
@@ -116,7 +114,6 @@
       </div>
     </section>
 
-    <p class="hint-note" data-i18n="consoleHint">💡 Dica: abre a consola do navegador para veres pistas de desenvolvimento.</p>
   </main>
 
   <footer class="site-footer">
@@ -153,7 +150,6 @@
 </div>
 
 <div class="modal-overlay" id="modal-overlay">
-  <canvas id="confetti-canvas"></canvas>
   <div class="modal" id="modal">
     <span class="modal-icon" id="modal-icon">🟡</span>
     <h2 class="modal-title" id="modal-title">Título</h2>

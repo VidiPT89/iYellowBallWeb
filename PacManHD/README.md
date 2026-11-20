@@ -1,14 +1,14 @@
 # 🟡 Pac-Man HD — Run, Chase, Eat It All
 
-> A polished, animated remake of the 1980 arcade classic — a glowing neon maze, four ghosts with real personalities, and a chase that never lets up.
+> A polished, animated remake of the 1980 arcade classic — a crisp blue arcade maze, four ghosts with real personalities, and a chase that never lets up.
 
 **🎮 [Live Demo](https://vidipt89.github.io/pacmanHD/)**
 
-"Pac-Man" is a browser-based maze-chase built with vanilla HTML, CSS and JavaScript — no frameworks, no build step, no game engine. Guide Pac-Man through a 28×28 neon-glowing maze, gobble every dot and power pellet, and outrun four ghosts before they corner you. Each ghost hunts differently — Blinky chases directly, Pinky ambushes ahead of you, Inky flanks unpredictably, and Clyde loses interest up close — and a power pellet flips the hunt for a few precious seconds, turning every ghost into prey.
+"Pac-Man" is a browser-based maze-chase built with vanilla HTML, CSS and JavaScript — no frameworks, no build step, no game engine. Guide Pac-Man through a 28×28 blue-outlined maze, gobble every dot and power pellet, and outrun four ghosts before they corner you. Each ghost hunts differently — Blinky chases directly, Pinky ambushes ahead of you, Inky flanks unpredictably, and Clyde loses interest up close — and a power pellet flips the hunt for a few precious seconds, turning every ghost into prey.
 
 ## 📦 What's Inside
 
-- 🧩 A full 28×28 classic-style maze rendered on canvas with glowing walls, pulsing pac-dots and animated power pellets
+- 🧩 A full 28×28 classic-style maze rendered on canvas with continuous blue wall outlines, pulsing pac-dots and animated power pellets
 - 🟡 Smooth, continuously-animated Pac-Man movement (not grid-snapped) with a rotating, chomping mouth that follows the travel direction
 - 👻 Four ghosts — Blinky, Pinky, Inky, Clyde — each with authentic chase logic (direct pursuit, ambush, flank, and distance-based shyness) plus scatter/chase phases that alternate over time
 - 😱 Power pellets trigger a frightened state — ghosts turn blue and flee, with an escalating 200 → 400 → 800 → 1600 combo for eating them in a row
@@ -16,13 +16,13 @@
 - 🌀 Classic tunnel wraparound on the side corridor, exactly like the arcade original
 - ♾️ Endless level progression — clear the maze and the next one begins with faster ghosts, same lives and score
 - 🎯 Three difficulty levels — Easy (4 lives), Normal (3 lives), Hard (2 lives) — each tuning ghost speed, frightened duration and release timing
-- 🏆 Best score tracked per difficulty, saved locally, with a "new record" callout and confetti burst on game over
+- 🏆 Best score tracked per difficulty, saved locally, with a "new record" callout on game over
 - 🔊 Fully synthesized retro sound effects via the Web Audio API — chomping, power-up siren, ghost-eaten blips, death sequence, level fanfare — no audio files
 - 🇵🇹 🇬🇧 One-click language toggle between European Portuguese and English, remembered between visits
 - ⌨️ 📱 Full keyboard support (arrows/WASD) plus a touch-friendly on-screen D-pad with a dedicated pause button
 - ⏸️ Pause/resume at any time, with a dimmed overlay and its own translated hint text
 - 🎬 An animated intro splash on load that auto-dismisses into the game, crediting the developer
-- 🌌 Animated ambient background rendered on a dedicated canvas, independent of the game screen
+- 🌌 Quiet cabinet background that keeps attention on the maze
 - 🖥️ CRT-style scanline overlay and neon glow styling for an authentic arcade-cabinet feel
 
 ## 🛠️ Tech Stack
@@ -100,3 +100,30 @@ No build step, no dependencies — it's static HTML/CSS/JS and can also be serve
 ---
 
 Developed by **David Arsénio Martins** — *"Vidi"*
+
+
+## Arcade refinement (2026-11-20)
+
+- Connected blue wall outlines, pink ghost-house door and restrained character glow.
+- Readable frightened faces, including contrasting eyes and mouth during the warning flash.
+- Immediate direction reversal between tiles; existing corner controls preserved.
+- Ghosts slow in the side tunnel; collisions work across its wraparound seam.
+- Frightened mode suspends the chase/scatter clock and applies to ghosts leaving the house.
+- Level/death transitions use simulation time: pausing freezes them and restarting cancels them.
+- Losing focus pauses the game and clears held controls.
+- Original maze, four ghost personalities, difficulty presets and scoring retained.
+
+Run the engine regressions with `node tests/gameplay.cjs` (Node.js, no dependencies).
+
+
+## Verification and controls (2026-11-20)
+
+- Short taps remain buffered for 180 ms and are consumed at the next valid turn.
+- Closing game over returns to the menu. Paused/death transitions cannot leak into a new round.
+- Storage and audio failures do not prevent play.
+- During a round the page focuses on the cabinet; landscape phones place the controls beside the maze.
+- Removed unused particle/background renderers, pointer glow, confetti and developer-console prompts.
+
+`node tests/gameplay.cjs` runs 19 engine regressions without dependencies. It also checks maze parity when the sibling Apple repository is present.
+
+Optional browser integration tests require Playwright: `node tests/browser.cjs`. Set `PLAYWRIGHT_MODULE` to an existing installation or install Playwright locally; `CHROMIUM_PATH` optionally selects a browser executable. The suite uses an isolated profile and checks desktop, portrait/landscape phone layouts, gameplay/menu flows and unavailable storage/audio. Screenshots go to the OS temporary directory.
