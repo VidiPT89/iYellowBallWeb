@@ -3,15 +3,14 @@ const { readFileSync, existsSync } = require('node:fs');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const noop = () => {};
-const context2d = new Proxy({}, { get: (_, key) => key === 'createRadialGradient' ? () => ({ addColorStop: noop }) : noop, set: () => true });
+const context2d = new Proxy({}, { get: () => noop, set: () => true });
 const elements = new Map();
 function element(id) {
   if (!elements.has(id)) elements.set(id, {
     width: 560, height: 560, style: {}, dataset: {}, textContent: '', innerHTML: '',
     classList: { add: noop, remove: noop, toggle: noop, contains: () => false },
     getContext: () => context2d, addEventListener: noop, setAttribute: noop,
-    focus: noop, appendChild: noop, querySelector: () => element('child'),
-    getBoundingClientRect: () => ({ left: 0, top: 0, width: 560, height: 560 }),
+    focus: noop, appendChild: noop, setPointerCapture: noop,
   });
   return elements.get(id);
 }
@@ -19,8 +18,8 @@ const sandbox = {
   console: { log: noop }, Math, performance: { now: () => 0 },
   navigator: { language: 'pt' }, localStorage: { getItem: () => null, setItem: noop },
   document: { getElementById: element, createElement: () => element(Symbol()), querySelectorAll: () => [], addEventListener: noop, documentElement: {}, body: element("body") },
-  window: { innerWidth: 1000, innerHeight: 900, addEventListener: noop, matchMedia: () => ({ matches: true }) },
-  requestAnimationFrame: noop, cancelAnimationFrame: noop, setTimeout: noop, clearTimeout: noop,
+  window: { addEventListener: noop },
+  requestAnimationFrame: noop, setTimeout: noop, clearTimeout: noop,
 };
 vm.createContext(sandbox);
 vm.runInContext(readFileSync(`${__dirname}/../script.js`, 'utf8'), sandbox);
@@ -36,7 +35,10 @@ test('Resume finishes level transition once', `state.running = true; levelComple
 test('Respawn resets phase schedule', `state.phaseIndex=4; state.phaseTimer=3000; respawnPositions(); state.phaseIndex === 0 && state.phaseTimer === 0`);
 test('Tunnel collision wraps across seam', `pacman.x=0; pacman.y=260; ghosts=ghosts.slice(0,1); ghosts[0].x=559; ghosts[0].y=260; ghosts[0].state='chase'; checkGhostCollisions(); state.dying`);
 test('Tunnel slows live ghosts but not eyes', `const g=ghosts[0]; g.row=13; g.x=0; g.state='chase'; const slow=ghostSpeedFor(g); g.x=200; slow < ghostSpeedFor(g)`);
-test('Ghost leaving house respects active power pellet', `const g=ghosts[0]; g.state='leaving'; g.x=260; g.y=200; state.frightenedTimer=1000; updateGhost(g,16); g.state === 'frightened'`);
+test('Ghost leaving house respects active power pellet', `const g=ghosts[0]; g.state='leaving'; g.x=260; g.y=200; triggerFrightened(); isFrightened(g) && (updateGhost(g,16), g.state === 'frightened')`);
+test('Revived ghost is not frightened again by the same pellet', `const g=ghosts[0]; g.state='chase'; triggerFrightened(); eatGhost(g); g.state='leaving'; g.x=260; g.y=200; updateGhost(g,16); !isFrightened(g) && g.state !== 'frightened'`);
+test('Returning eyes glide into the house without teleporting', `const g=ghosts[1]; g.state='eaten'; g.col=13;g.row=12;g.x=260;g.y=240; g.dir={x:0,y:1}; updateGhost(g,1); const jump=Math.abs(g.x-260); for(let i=0;i<40;i++)updateGhost(g,16); jump<=2 && g.state==='house' && g.x===g.home.col*CELL`);
+test('Frightened time shortens with level but keeps a floor', `const l1=frightenedDuration(); state.level=50; const l50=frightenedDuration(); l1===cfg.frightenedMs && l50===Math.round(cfg.frightenedMs*0.4)`);
 test('Every pellet is reachable without entering ghost house', `const seen=new Set(); const queue=[[PAC_HOME.col,PAC_HOME.row]]; while(queue.length) {const [c,r]=queue.shift();const key=idx(c,r);if(seen.has(key))continue;seen.add(key);for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0]]){const nc=(c+dx+COLS)%COLS,nr=r+dy;if(nr>=0&&nr<ROWS&&!pacBlocked(nc,nr)&&!seen.has(idx(nc,nr)))queue.push([nc,nr]);}} MAZE.every((v,i)=>v!==0&&v!==3||seen.has(i))`);
 
 test('Eaten ghost can return from every walkable tile', `let failures=[]; for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(pacBlocked(c,r))continue; const g=buildGhosts()[0]; g.state='eaten'; g.col=c;g.row=r;g.x=c*CELL;g.y=r*CELL; for(let i=0;i<3000 && g.state==='eaten';i++)updateGhost(g,16); if(g.state==='eaten')failures.push([c,r]);} if(failures.length) console.log(failures); failures.length===0`);

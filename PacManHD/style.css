@@ -35,8 +35,6 @@ html, body {
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 .app {
-  position: relative;
-  z-index: 1;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -73,7 +71,6 @@ html, body {
 .brand-icon {
   font-size: 1.4rem;
   display: inline-block;
-  filter: drop-shadow(0 0 6px rgba(255, 212, 0, 0.6));
 }
 
 .topbar-actions {
@@ -188,7 +185,6 @@ html, body {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   color: var(--fg);
-  border-radius: 14px;
   padding: 10px 18px;
   cursor: pointer;
   display: flex;
@@ -197,6 +193,7 @@ html, body {
   gap: 3px;
   transition: all 0.2s ease;
   font-family: var(--font-display);
+  border-radius: 4px;
 }
 
 .diff-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
@@ -204,7 +201,7 @@ html, body {
 .diff-btn.is-active {
   border-color: var(--accent);
   background: linear-gradient(180deg, var(--accent-soft), rgba(255, 212, 0, 0.04));
-  box-shadow: 0 0 0 1px var(--accent-soft), 0 8px 24px -8px rgba(255, 212, 0, 0.5);
+  box-shadow: inset 0 -3px 0 var(--accent);
 }
 
 .diff-name { font-weight: 700; font-size: 0.95rem; }
@@ -215,12 +212,11 @@ html, body {
 .game-card {
   position: relative;
   width: min(560px, 94vw);
-  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01));
-  border: 1px solid var(--border);
+  background: #080b16;
+  border: 2px solid #26365f;
   border-radius: var(--radius);
   padding: 22px clamp(14px, 4vw, 26px) 20px;
-  backdrop-filter: blur(14px);
-  box-shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
+  box-shadow: 0 6px 0 #02040a, inset 0 1px 0 #42517a;
   opacity: 0;
   animation: cardIn 0.7s cubic-bezier(.16,1,.3,1) forwards;
   animation-delay: 0.4s;
@@ -248,13 +244,15 @@ html, body {
   font-size: 0.64rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: #b8c6eb;
 }
 
 .stat-value {
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 1.05rem;
+  color: #ffe28a;
+  font-variant-numeric: tabular-nums;
 }
 
 .lives {
@@ -280,10 +278,10 @@ html, body {
   width: 100%;
   aspect-ratio: 1 / 1;
   background: #010102;
-  border-radius: 12px;
+  border-radius: 3px;
   overflow: hidden;
-  border: 1px solid rgba(255, 212, 0, 0.22);
-  box-shadow: inset 0 0 40px rgba(0,0,0,0.85), 0 0 30px -8px rgba(255, 212, 0, 0.25);
+  border: 1px solid #334675;
+  box-shadow: 0 0 0 4px #02040a;
 }
 
 #game-canvas {
@@ -319,12 +317,13 @@ html, body {
   backdrop-filter: blur(2px);
   text-align: center;
   padding: 20px;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.25s ease, visibility 0.25s;
   cursor: pointer;
 }
 
 .overlay-layer.is-hidden {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
 }
 
@@ -342,8 +341,6 @@ html, body {
   font-size: clamp(0.85rem, 3.2vw, 1.3rem);
   color: var(--accent-bright);
   margin: 0;
-  text-shadow: 0 0 14px rgba(255,212,0,0.7);
-  animation: blinkSoft 1.6s ease-in-out infinite;
 }
 
 .overlay-sub {
@@ -462,14 +459,14 @@ html, body {
   font-size: 0.78rem;
 }
 
-.footer-links a {
+.footer-links a, .intro-links a {
   color: var(--accent-bright);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
-.footer-links a:hover { color: var(--accent); text-decoration: underline; }
-.footer-links .dot { color: var(--border); }
+.footer-links a:hover, .intro-links a:hover { color: var(--accent); text-decoration: underline; }
+.footer-links .dot, .intro-links .dot { color: var(--border); }
 
 /* ---------- Modal ---------- */
 .modal-overlay {
@@ -581,15 +578,6 @@ html, body {
   font-size: 0.8rem;
 }
 
-.intro-links a {
-  color: var(--accent-bright);
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.intro-links a:hover { color: var(--accent); text-decoration: underline; }
-.intro-links .dot { color: var(--border); }
-
 .intro-skip {
   margin: 0 auto 16px;
   display: block;
@@ -670,21 +658,6 @@ html, body {
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 
-/* Arcade cabinet finish: restrained CRT, hard edges and a quiet playfield. */
-
-.game-card {
-  background: #080b16;
-  border: 2px solid #26365f;
-  box-shadow: 0 6px 0 #02040a, inset 0 1px 0 #42517a;
-  backdrop-filter: none;
-}
-
-.screen-frame { border-radius: 3px; border-color: #334675; box-shadow: 0 0 0 4px #02040a; }
-.stat-value { color: #ffe28a; font-variant-numeric: tabular-nums; }
-.stat-label { color: #b8c6eb; }
-.diff-btn { border-radius: 4px; }
-.diff-btn.is-active { box-shadow: inset 0 -3px 0 var(--accent); }
-.brand-icon { animation: none; filter: none; }
 button:focus-visible, a:focus-visible { outline: 3px solid #ffe28a; outline-offset: 4px; }
 #game-canvas, .dpad { touch-action: none; }
 @media (max-width: 600px) {
@@ -699,8 +672,6 @@ button:focus-visible, a:focus-visible { outline: 3px solid #ffe28a; outline-offs
 /* During a round the cabinet takes priority over the introductory copy. */
 .is-playing .hero, .is-playing .difficulty-picker, .is-playing .site-footer { display: none; }
 .is-playing .stage { gap: 0; padding: 8px 12px 16px; }
-.overlay-layer.is-hidden { visibility: hidden; }
-.overlay-title { animation: none; text-shadow: none; }
 @media (orientation: landscape) and (max-height: 600px) {
   .is-playing .topbar { padding: 8px 16px; }
   .is-playing .game-card { width: min(700px, 96vw); display: grid; grid-template-columns: minmax(0, 1fr) 172px; gap: 8px 16px; padding: 12px; }

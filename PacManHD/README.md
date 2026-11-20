@@ -11,7 +11,7 @@
 - 🧩 A full 28×28 classic-style maze rendered on canvas with continuous blue wall outlines, pulsing pac-dots and animated power pellets
 - 🟡 Smooth, continuously-animated Pac-Man movement (not grid-snapped) with a rotating, chomping mouth that follows the travel direction
 - 👻 Four ghosts — Blinky, Pinky, Inky, Clyde — each with authentic chase logic (direct pursuit, ambush, flank, and distance-based shyness) plus scatter/chase phases that alternate over time
-- 😱 Power pellets trigger a frightened state — ghosts turn blue and flee, with an escalating 200 → 400 → 800 → 1600 combo for eating them in a row
+- 😱 Power pellets trigger a frightened state — ghosts turn blue and flee (even those still in the house), with an escalating 200 → 400 → 800 → 1600 combo for eating them in a row; a ghost revived mid-pellet comes back dangerous, and blue time shortens each level
 - 👀 Eaten ghosts race home as a pair of eyes and re-emerge from the ghost house after a short respawn
 - 🌀 Classic tunnel wraparound on the side corridor, exactly like the arcade original
 - ♾️ Endless level progression — clear the maze and the next one begins with faster ghosts, same lives and score
@@ -19,11 +19,12 @@
 - 🏆 Best score tracked per difficulty, saved locally, with a "new record" callout on game over
 - 🔊 Fully synthesized retro sound effects via the Web Audio API — chomping, power-up siren, ghost-eaten blips, death sequence, level fanfare — no audio files
 - 🇵🇹 🇬🇧 One-click language toggle between European Portuguese and English, remembered between visits
-- ⌨️ 📱 Full keyboard support (arrows/WASD) plus a touch-friendly on-screen D-pad with a dedicated pause button
+- ⌨️ 📱 Full keyboard support (arrows/WASD), swipe-to-steer on the maze, plus a touch-friendly on-screen D-pad with a dedicated pause button; short taps are buffered until the next valid turn
 - ⏸️ Pause/resume at any time, with a dimmed overlay and its own translated hint text
 - 🎬 An animated intro splash on load that auto-dismisses into the game, crediting the developer
 - 🌌 Quiet cabinet background that keeps attention on the maze
-- 🖥️ CRT-style scanline overlay and neon glow styling for an authentic arcade-cabinet feel
+- 🖥️ CRT-style scanline overlay and restrained arcade-cabinet styling
+- ♿ Translated accessible labels, live-announced score toasts, and `prefers-reduced-motion` support
 
 ## 🛠️ Tech Stack
 
@@ -38,6 +39,9 @@ pacmanHD/
 ├── index.html      # Page structure, difficulty picker, game card, canvas, HUD, modal
 ├── style.css       # Theme, layout, CRT/scanline effects, responsive rules
 ├── script.js       # Maze, movement engine, ghost AI, i18n, sound and rendering
+├── tests/
+│   ├── gameplay.cjs # Engine regressions in Node (no dependencies)
+│   └── browser.cjs  # Optional Playwright integration suite
 ├── LICENSE         # MIT License
 └── README.md
 ```
@@ -90,6 +94,16 @@ open index.html    # macOS
 
 No build step, no dependencies — it's static HTML/CSS/JS and can also be served with any static file server (e.g. `python3 -m http.server`).
 
+## 🧪 Tests
+
+```bash
+node tests/gameplay.cjs   # 22 engine regressions, no dependencies
+```
+
+Covers movement, turn buffering, tunnel wraparound, ghost AI and house logic, frightened mode, scoring and extra life, death/level transitions, pause and storage/audio failures. It also checks maze parity when the sibling Apple repository is present.
+
+Optional browser integration tests need Playwright: `node tests/browser.cjs`. Set `PLAYWRIGHT_MODULE` to an existing installation (or install Playwright locally) and optionally `CHROMIUM_PATH` to a browser executable. The suite checks desktop and portrait/landscape phone layouts, gameplay/menu flows, swipe steering, language switching and unavailable storage/audio. Screenshots go to the OS temporary directory.
+
 ## 📝 Notes
 
 - This is the "HD" remake of [pacman](https://github.com/VidiPT89/pacman), the original minimal DOM-based version of the game — same core idea (eat dots, dodge ghosts, chase power pellets), rebuilt from scratch on canvas with smooth movement, real ghost AI and extra mechanics
@@ -100,30 +114,3 @@ No build step, no dependencies — it's static HTML/CSS/JS and can also be serve
 ---
 
 Developed by **David Arsénio Martins** — *"Vidi"*
-
-
-## Arcade refinement (2026-11-20)
-
-- Connected blue wall outlines, pink ghost-house door and restrained character glow.
-- Readable frightened faces, including contrasting eyes and mouth during the warning flash.
-- Immediate direction reversal between tiles; existing corner controls preserved.
-- Ghosts slow in the side tunnel; collisions work across its wraparound seam.
-- Frightened mode suspends the chase/scatter clock and applies to ghosts leaving the house.
-- Level/death transitions use simulation time: pausing freezes them and restarting cancels them.
-- Losing focus pauses the game and clears held controls.
-- Original maze, four ghost personalities, difficulty presets and scoring retained.
-
-Run the engine regressions with `node tests/gameplay.cjs` (Node.js, no dependencies).
-
-
-## Verification and controls (2026-11-20)
-
-- Short taps remain buffered for 180 ms and are consumed at the next valid turn.
-- Closing game over returns to the menu. Paused/death transitions cannot leak into a new round.
-- Storage and audio failures do not prevent play.
-- During a round the page focuses on the cabinet; landscape phones place the controls beside the maze.
-- Removed unused particle/background renderers, pointer glow, confetti and developer-console prompts.
-
-`node tests/gameplay.cjs` runs 19 engine regressions without dependencies. It also checks maze parity when the sibling Apple repository is present.
-
-Optional browser integration tests require Playwright: `node tests/browser.cjs`. Set `PLAYWRIGHT_MODULE` to an existing installation or install Playwright locally; `CHROMIUM_PATH` optionally selects a browser executable. The suite uses an isolated profile and checks desktop, portrait/landscape phone layouts, gameplay/menu flows and unavailable storage/audio. Screenshots go to the OS temporary directory.

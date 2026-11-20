@@ -25,10 +25,10 @@
       <span class="brand-name">Pac-Man <em>HD</em></span>
     </div>
     <div class="topbar-actions">
-      <button id="sound-toggle" class="icon-btn" type="button" aria-label="Som" title="Som">
+      <button id="sound-toggle" class="icon-btn" type="button" data-i18n-aria="soundAria" aria-label="Ligar ou desligar o som" title="Ligar ou desligar o som">
         <span id="sound-icon">🔊</span>
       </button>
-      <button id="lang-toggle" class="lang-btn" type="button" aria-label="Mudar idioma">
+      <button id="lang-toggle" class="lang-btn" type="button" data-i18n-aria="langAria" aria-label="Mudar idioma">
         <span class="flag" id="lang-flag">🇵🇹</span>
         <span id="lang-label">PT</span>
       </button>
@@ -45,7 +45,7 @@
       <p class="tagline" data-i18n="tagline">Guia o Pac-Man pelo labirinto, engole todos os pontos e as pastilhas de poder, e foge dos quatro fantasmas — cada um com a sua própria personalidade — antes que te apanhem.</p>
     </section>
 
-    <section class="difficulty-picker" id="difficulty-picker" role="radiogroup" aria-label="Dificuldade">
+    <section class="difficulty-picker" id="difficulty-picker" role="radiogroup" data-i18n-aria="difficultyAria" aria-label="Dificuldade">
       <button class="diff-btn" data-diff="easy" role="radio" aria-checked="false" type="button">
         <span class="diff-name" data-i18n="diffEasy">Fácil</span>
         <span class="diff-meta"><span data-i18n="diffEasyMeta">4 vidas</span></span>
@@ -82,7 +82,7 @@
       </div>
 
       <div class="screen-frame">
-        <canvas tabindex="0" aria-label="Pac-Man" id="game-canvas" width="560" height="560"></canvas>
+        <canvas tabindex="0" data-i18n-aria="canvasAria" aria-label="Labirinto do jogo" id="game-canvas" width="560" height="560"></canvas>
         <div class="scanlines" aria-hidden="true"></div>
 
         <div class="overlay-layer" id="start-overlay">
@@ -99,17 +99,17 @@
           </div>
         </div>
 
-        <div class="toast" id="wave-toast"></div>
+        <div class="toast" id="wave-toast" role="status" aria-live="polite"></div>
       </div>
 
       <div class="controls-row">
         <p class="hint-note desktop-only" data-i18n="controlsHint">⌨️ Setas ou WASD para mover · P para pausar</p>
         <div class="dpad">
-          <button class="touch-btn dpad-up" id="btn-up" aria-label="Cima" type="button">▲</button>
-          <button class="touch-btn dpad-left" id="btn-left" aria-label="Esquerda" type="button">◀</button>
-          <button class="touch-btn dpad-pause" id="btn-pause" aria-label="Pausa" type="button">❚❚</button>
-          <button class="touch-btn dpad-right" id="btn-right" aria-label="Direita" type="button">▶</button>
-          <button class="touch-btn dpad-down" id="btn-down" aria-label="Baixo" type="button">▼</button>
+          <button class="touch-btn dpad-up" id="btn-up" data-i18n-aria="upAria" aria-label="Cima" type="button">▲</button>
+          <button class="touch-btn dpad-left" id="btn-left" data-i18n-aria="leftAria" aria-label="Esquerda" type="button">◀</button>
+          <button class="touch-btn dpad-pause" id="btn-pause" data-i18n-aria="pauseAria" aria-label="Pausa" type="button">❚❚</button>
+          <button class="touch-btn dpad-right" id="btn-right" data-i18n-aria="rightAria" aria-label="Direita" type="button">▶</button>
+          <button class="touch-btn dpad-down" id="btn-down" data-i18n-aria="downAria" aria-label="Baixo" type="button">▼</button>
         </div>
       </div>
     </section>
@@ -150,8 +150,8 @@
 </div>
 
 <div class="modal-overlay" id="modal-overlay">
-  <div class="modal" id="modal">
-    <span class="modal-icon" id="modal-icon">🟡</span>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <span class="modal-icon">👻</span>
     <h2 class="modal-title" id="modal-title">Título</h2>
     <p class="modal-text" id="modal-text">Texto</p>
     <div class="modal-stats" id="modal-stats"></div>

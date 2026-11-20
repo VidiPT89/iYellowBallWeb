@@ -39,6 +39,16 @@ const TRANSLATIONS = {
     statBest: "Recorde",
     newBest: "🏆 Novo recorde!",
     ghostEatToast: (n) => `+${n}`,
+    docTitle: "Pac-Man HD — Foge, Persegue, Come Tudo",
+    soundAria: "Ligar ou desligar o som",
+    langAria: "Mudar idioma",
+    difficultyAria: "Dificuldade",
+    canvasAria: "Labirinto do jogo",
+    upAria: "Cima",
+    downAria: "Baixo",
+    leftAria: "Esquerda",
+    rightAria: "Direita",
+    pauseAria: "Pausa",
   },
   en: {
     introTitle: "Pac-Man HD",
@@ -79,6 +89,16 @@ const TRANSLATIONS = {
     statBest: "Best",
     newBest: "🏆 New record!",
     ghostEatToast: (n) => `+${n}`,
+    docTitle: "Pac-Man HD — Run, Chase, Eat It All",
+    soundAria: "Toggle sound",
+    langAria: "Change language",
+    difficultyAria: "Difficulty",
+    canvasAria: "Game maze",
+    upAria: "Up",
+    downAria: "Down",
+    leftAria: "Left",
+    rightAria: "Right",
+    pauseAria: "Pause",
   },
 };
 
@@ -194,7 +214,6 @@ const startOverlay = el("start-overlay");
 const pauseOverlay = el("pause-overlay");
 const waveToast = el("wave-toast");
 const modalOverlay = el("modal-overlay");
-const modalIcon = el("modal-icon");
 const modalTitle = el("modal-title");
 const modalText = el("modal-text");
 const modalStats = el("modal-stats");
@@ -234,9 +253,16 @@ function applyTranslations() {
     const value = TRANSLATIONS[state.lang][key];
     if (typeof value === "string") node.textContent = value;
   });
+  document.querySelectorAll("[data-i18n-aria]").forEach((node) => {
+    const label = t(node.getAttribute("data-i18n-aria"));
+    node.setAttribute("aria-label", label);
+    if (node.hasAttribute("title")) node.setAttribute("title", label);
+  });
+  document.title = t("docTitle");
   el("lang-label").textContent = state.lang.toUpperCase();
   el("lang-flag").textContent = state.lang === "pt" ? "🇵🇹" : "🇬🇧";
   updateBestDisplay();
+  if (state.over && lastResult) renderGameOver();
 }
 
 function setLang(lang) {
@@ -278,7 +304,7 @@ function playTone(freq, duration, type = "square", gainValue = 0.05, delay = 0) 
     gain.gain.setValueAtTime(gainValue, startAt);
     gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
     osc.stop(startAt + duration + 0.02);
-  } catch (e) {
+  } catch {
     /* audio unsupported */
   }
 }
@@ -354,6 +380,8 @@ function buildGhosts() {
     x: def.home.col * CELL, y: def.home.row * CELL,
     dir: { x: 0, y: 0 },
     state: "house",
+    scared: false,
+    houseX: def.home.col * CELL, houseY: def.home.row * CELL,
     houseTimer: 0,
     releaseDelay: cfg.releaseDelays[i],
     bouncePhase: Math.random() * Math.PI * 2,
@@ -463,8 +491,6 @@ function getGhostTarget(ghost) {
   const p = { col: pacman.col, row: pacman.row };
   const pdir = (pacman.dir.x || pacman.dir.y) ? pacman.dir : pacman.lastDir;
   switch (ghost.name) {
-    case "blinky":
-      return p;
     case "pinky":
       return { col: p.col + pdir.x * 4, row: p.row + pdir.y * 4 };
     case "inky": {
@@ -478,7 +504,7 @@ function getGhostTarget(ghost) {
       const dist = Math.hypot(ghost.col - p.col, ghost.row - p.row);
       return dist > 8 ? p : ghost.scatter;
     }
-    default:
+    default: // blinky: direct pursuit
       return p;
   }
 }
@@ -504,6 +530,16 @@ function pickGhostDir(ghost, col, row) {
   return best;
 }
 
+// A ghost is edible while blue. Ghosts still in (or leaving) the house when a
+// power pellet is eaten turn blue too; a ghost revived after being eaten does not.
+function isFrightened(ghost) {
+  return ghost.state === "frightened" || (ghost.scared && (ghost.state === "house" || ghost.state === "leaving"));
+}
+
+function frightenedDuration() {
+  return Math.max(Math.round(cfg.frightenedMs * 0.4), cfg.frightenedMs - (state.level - 1) * 500);
+}
+
 function ghostSpeedFor(ghost) {
   const levelBonus = Math.min(0.3, (state.level - 1) * 0.03);
   let mul = cfg.ghostSpeedMul * (1 + levelBonus);
@@ -517,8 +553,13 @@ function updateGhost(ghost, dt) {
   if (ghost.state === "house") {
     ghost.houseTimer += dt;
     ghost.bouncePhase += dt * 0.006;
-    ghost.y = ghost.home.row * CELL + Math.sin(ghost.bouncePhase) * 8;
-    ghost.x = ghost.home.col * CELL;
+    // Eyes that just got home glide to their bay instead of teleporting.
+    const step = dt * 0.08;
+    const approach = (from, to) => from + Math.max(-step, Math.min(step, to - from));
+    ghost.houseX = approach(ghost.houseX, ghost.home.col * CELL);
+    ghost.houseY = approach(ghost.houseY, ghost.home.row * CELL);
+    ghost.x = ghost.houseX;
+    ghost.y = ghost.houseY + Math.sin(ghost.bouncePhase) * 8;
     if (ghost.houseTimer >= ghost.releaseDelay) {
       ghost.state = "leaving";
       ghost.col = ghost.home.col; ghost.row = ghost.home.row;
@@ -529,10 +570,12 @@ function updateGhost(ghost, dt) {
   }
   stepEntity(ghost, ghostSpeedFor(ghost), dt, (e, c, r) => pickGhostDir(ghost, c, r), (c, r) => {
     if (ghost.state === "leaving" && r <= 10) {
-      ghost.state = state.frightenedTimer > 0 ? "frightened" : currentPhaseMode();
+      ghost.state = ghost.scared && state.frightenedTimer > 0 ? "frightened" : currentPhaseMode();
     }
     if (ghost.state === "eaten" && r >= 12 && r <= 13 && c >= 11 && c <= 16) {
       ghost.state = "house";
+      ghost.houseX = ghost.x; ghost.houseY = ghost.y;
+      ghost.bouncePhase = 0;
       ghost.houseTimer = 0;
       ghost.releaseDelay = 1200;
     }
@@ -598,8 +641,9 @@ function checkExtraLife() {
 
 function triggerFrightened() {
   state.ghostEatStreak = 0;
-  state.frightenedTimer = cfg.frightenedMs;
+  state.frightenedTimer = frightenedDuration();
   ghosts.forEach((g) => {
+    if (g.state !== "eaten") g.scared = true;
     if (g.state === "scatter" || g.state === "chase" || g.state === "frightened") {
       if (g.state !== "frightened") g.dir = { x: -g.dir.x, y: -g.dir.y };
       g.state = "frightened";
@@ -614,6 +658,7 @@ function eatGhost(g) {
   updateScoreUI();
   flashToast(t("ghostEatToast", value));
   g.state = "eaten";
+  g.scared = false;
   playEatGhostTone();
   checkExtraLife();
 }
@@ -662,8 +707,10 @@ function respawnPositions() {
   ghosts.forEach((g, i) => {
     g.col = g.home.col; g.row = g.home.row;
     g.x = g.home.col * CELL; g.y = g.home.row * CELL;
+    g.houseX = g.x; g.houseY = g.y;
     g.dir = { x: 0, y: 0 };
     g.state = "house";
+    g.scared = false;
     g.houseTimer = 0;
     g.releaseDelay = cfg.releaseDelays[i];
   });
@@ -684,34 +731,31 @@ function levelComplete() {
   });
 }
 
+let lastResult = null;
+
 function endGame() {
   state.over = true;
   state.running = false;
   const best = bestScore();
-  let isNewBest = false;
-  if (state.score > best) {
-    writeStorage(bestKey(state.difficulty), String(state.score));
-    isNewBest = true;
-  }
-  modalIcon.textContent = "👻";
-  modalTitle.textContent = t("loseTitle");
-  modalText.textContent = t("textCaught", state.level);
-  modalStats.innerHTML = `
-    <div class="m-stat">
-      <span class="m-stat-value">${state.score}</span>
-      <span class="m-stat-label">${t("statScore")}</span>
-    </div>
-    <div class="m-stat">
-      <span class="m-stat-value">${state.level}</span>
-      <span class="m-stat-label">${t("statLevel")}</span>
-    </div>
-    <div class="m-stat">
-      <span class="m-stat-value">${isNewBest ? t("newBest") : best}</span>
-      <span class="m-stat-label">${t("statBest")}</span>
-    </div>
-  `;
+  const isNewBest = state.score > best;
+  if (isNewBest) writeStorage(bestKey(state.difficulty), String(state.score));
+  lastResult = { score: state.score, level: state.level, best, isNewBest };
+  renderGameOver();
   updateBestDisplay();
   openModal();
+}
+
+// Kept separate so switching language while the modal is open re-renders it.
+function renderGameOver() {
+  const { score, level, best, isNewBest } = lastResult;
+  modalTitle.textContent = t("loseTitle");
+  modalText.textContent = t("textCaught", level);
+  const stat = (value, label) => `
+    <div class="m-stat">
+      <span class="m-stat-value">${value}</span>
+      <span class="m-stat-label">${t(label)}</span>
+    </div>`;
+  modalStats.innerHTML = stat(score, "statScore") + stat(level, "statLevel") + stat(isNewBest ? t("newBest") : best, "statBest");
 }
 
 /* ==================== Phase / frightened timers ==================== */
@@ -736,7 +780,10 @@ function updateFrightened(dt) {
     state.frightenedTimer -= dt;
     if (state.frightenedTimer <= 0) {
       state.frightenedTimer = 0;
-      ghosts.forEach((g) => { if (g.state === "frightened") g.state = currentPhaseMode(); });
+      ghosts.forEach((g) => {
+        g.scared = false;
+        if (g.state === "frightened") g.state = currentPhaseMode();
+      });
     }
   }
 }
@@ -748,7 +795,7 @@ function checkGhostCollisions() {
     const dx = Math.abs(g.x - pacman.x);
     const dist = Math.hypot(Math.min(dx, CW - dx), g.y - pacman.y);
     if (dist < CELL * 0.55) {
-      if (g.state === "frightened") { eatGhost(g); }
+      if (isFrightened(g)) { eatGhost(g); }
       else if (g.state !== "eaten") {
         if (state.invulnerableTimer > 0) continue;
         startDeathSequence();
@@ -814,7 +861,6 @@ function closeIntro() {
   introOpen = false;
   clearTimeout(introTimer);
   introOverlay.classList.remove("is-open");
-  ensureAudio();
   playTone(440, 0.07);
 }
 el("intro-play").addEventListener("click", closeIntro);
@@ -936,6 +982,32 @@ bindDpad(el("btn-up"), 0, -1, "touch-up");
 bindDpad(el("btn-down"), 0, 1, "touch-down");
 bindDpad(el("btn-left"), -1, 0, "touch-left");
 bindDpad(el("btn-right"), 1, 0, "touch-right");
+// Swipe on the maze steers like a held D-pad direction until the finger lifts.
+let swipe = null;
+const SWIPE_MIN_PX = 14;
+canvas.addEventListener("pointerdown", (e) => {
+  if (e.pointerType === "mouse") return;
+  swipe = { x: e.clientX, y: e.clientY, dir: null };
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener("pointermove", (e) => {
+  if (!swipe) return;
+  const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < SWIPE_MIN_PX) return;
+  const dir = Math.abs(dx) > Math.abs(dy) ? { x: Math.sign(dx), y: 0 } : { x: 0, y: Math.sign(dy) };
+  swipe.x = e.clientX; swipe.y = e.clientY;
+  if (swipe.dir && swipe.dir.x === dir.x && swipe.dir.y === dir.y) return;
+  if (swipe.dir) releaseDir("swipe");
+  swipe.dir = dir;
+  pressDir("swipe", dir.x, dir.y);
+});
+const endSwipe = () => {
+  if (swipe?.dir) releaseDir("swipe");
+  swipe = null;
+};
+canvas.addEventListener("pointerup", endSwipe);
+canvas.addEventListener("pointercancel", endSwipe);
+canvas.addEventListener("lostpointercapture", endSwipe);
 el("btn-pause").addEventListener("click", (e) => { e.preventDefault(); togglePause(); });
 el("btn-resume").addEventListener("click", (e) => { e.stopPropagation(); resumeGame(); });
 el("btn-menu").addEventListener("click", (e) => { e.stopPropagation(); goToMenu(); });
@@ -959,15 +1031,11 @@ function update(dt) {
 
   if (state.dying) {
     state.dyingTimer += dt;
-
     if (state.dyingTimer >= DEATH_ANIM_MS) finishDeathSequence();
     return;
   }
 
-  if (!state.running || state.transitioning) {
-
-    return;
-  }
+  if (!state.running || state.transitioning) return;
 
   stepEntity(pacman, BASE_PAC_SPEED * cfg.pacSpeedMul, dt, pickPacDir, handleDotConsumption);
   if (state.transitioning) return;
@@ -1151,8 +1219,9 @@ function drawGhost(g) {
     drawEyes(cx, cy, size, dir);
     return;
   }
+  const frightened = isFrightened(g);
   let color = g.color;
-  if (g.state === "frightened") {
+  if (frightened) {
     const flashing = state.frightenedTimer < 2000 && Math.floor(performance.now() / 150) % 2 === 0;
     color = flashing ? "#eef2ff" : "#2b3fe0";
   }
@@ -1161,7 +1230,7 @@ function drawGhost(g) {
   ctx.shadowBlur = 1;
   drawGhostShape(cx, cy, size, color);
   ctx.restore();
-  if (g.state === "frightened") {
+  if (frightened) {
     ctx.save();
     ctx.strokeStyle = color === "#eef2ff" ? "#d92e38" : "#eef2ff";
     ctx.lineWidth = 1.4;
@@ -1190,7 +1259,6 @@ function draw() {
     ghosts.forEach(drawGhost);
     drawPacman();
   }
-
 }
 
 /* ==================== Main loop ==================== */
