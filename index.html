@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Pac-Man HD — Foge, Persegue, Come Tudo</title>
-<meta name="description" content="Um remake moderno e animado do clássico Pac-Man. Labirinto brilhante, quatro fantasmas com personalidade própria, pastilhas de poder e um placar de recordes, feito em HTML, CSS e JavaScript." />
-<meta property="og:title" content="Pac-Man HD" />
-<meta property="og:description" content="Foge, persegue, come tudo — remake moderno do clássico arcade." />
+<title>iYellowBall: rola, congela e parte cubos</title>
+<meta name="description" content="Jogo de labirintos em néon: um labirinto novo em cada nível, um desafio do dia igual para todos, quatro cubos com regras próprias e orbes de gelo. Feito em HTML, CSS e JavaScript." />
+<meta property="og:title" content="iYellowBall" />
+<meta property="og:description" content="Rola, congela e parte cubos num labirinto novo em cada nível." />
 <meta property="og:type" content="website" />
-<meta name="theme-color" content="#05060a" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9F%A1%3C/text%3E%3C/svg%3E" />
+<meta name="theme-color" content="#05060c" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23ffd21f' stroke='%23e09400' stroke-width='5'/%3E%3Cellipse cx='36' cy='34' rx='12' ry='8' fill='%23fff' opacity='.7'/%3E%3Cellipse cx='56' cy='50' rx='6' ry='9' fill='%231a1300'/%3E%3Cellipse cx='74' cy='50' rx='6' ry='9' fill='%231a1300'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -21,8 +21,8 @@
 
   <header class="topbar">
     <div class="brand">
-      <span class="brand-icon">🟡</span>
-      <span class="brand-name">Pac-Man <em>HD</em></span>
+      <span class="brand-icon ball-icon" aria-hidden="true"></span>
+      <span class="brand-name">i<em>Yellow</em>Ball</span>
     </div>
     <div class="topbar-actions">
       <button id="sound-toggle" class="icon-btn" type="button" data-i18n-aria="soundAria" aria-label="Ligar ou desligar o som" title="Ligar ou desligar o som">
@@ -37,15 +37,15 @@
 
   <main class="stage">
     <section class="hero">
-      <p class="eyebrow" data-i18n="eyebrow">LABIRINTO CLÁSSICO</p>
+      <p class="eyebrow" data-i18n="eyebrow">LABIRINTOS GERADOS</p>
       <h1 class="title">
-        <span class="title-line" data-i18n="title1">Foge. Persegue.</span>
-        <span class="title-line accent" data-i18n="title2">Come tudo.</span>
+        <span class="title-line" data-i18n="title1">Rola. Congela.</span>
+        <span class="title-line accent" data-i18n="title2">Parte os cubos.</span>
       </h1>
-      <p class="tagline" data-i18n="tagline">Guia o Pac-Man pelo labirinto, engole todos os pontos e as pastilhas de poder, e foge dos quatro fantasmas — cada um com a sua própria personalidade — antes que te apanhem.</p>
+      <p class="tagline" data-i18n="tagline">Cada nível é um labirinto novo, simétrico e sem becos sem saída. Apanha todas as gemas, foge de quatro cubos rabugentos e usa os orbes de gelo para os congelar e partir.</p>
     </section>
 
-    <section class="difficulty-picker" id="difficulty-picker" role="radiogroup" data-i18n-aria="difficultyAria" aria-label="Dificuldade">
+    <section class="difficulty-picker" id="difficulty-picker" role="radiogroup" data-i18n-aria="difficultyAria" aria-label="Modo de jogo">
       <button class="diff-btn" data-diff="easy" role="radio" aria-checked="false" type="button">
         <span class="diff-name" data-i18n="diffEasy">Fácil</span>
         <span class="diff-meta"><span data-i18n="diffEasyMeta">4 vidas</span></span>
@@ -57,6 +57,10 @@
       <button class="diff-btn" data-diff="hard" role="radio" aria-checked="false" type="button">
         <span class="diff-name" data-i18n="diffHard">Difícil</span>
         <span class="diff-meta"><span data-i18n="diffHardMeta">2 vidas</span></span>
+      </button>
+      <button class="diff-btn daily-btn" data-mode="daily" role="radio" aria-checked="false" type="button">
+        <span class="diff-name" data-i18n="dailyBtn">Desafio do dia</span>
+        <span class="diff-meta"><span data-i18n="dailyMeta">labirinto novo hoje</span></span>
       </button>
     </section>
 
@@ -82,7 +86,7 @@
       </div>
 
       <div class="screen-frame">
-        <canvas tabindex="0" data-i18n-aria="canvasAria" aria-label="Labirinto do jogo" id="game-canvas" width="560" height="560"></canvas>
+        <canvas tabindex="0" data-i18n-aria="canvasAria" aria-label="Labirinto do jogo" id="game-canvas" width="540" height="540"></canvas>
         <div class="scanlines" aria-hidden="true"></div>
 
         <div class="overlay-layer" id="start-overlay">
@@ -95,7 +99,7 @@
           <p class="overlay-sub" data-i18n="pausedSub">Prime P ou toca para retomar</p>
           <div class="overlay-actions">
             <button class="primary-btn" id="btn-resume" type="button" data-i18n="resumeBtn">Retomar</button>
-            <button class="ghost-btn" id="btn-menu" type="button" data-i18n="menuBtn">Menu inicial</button>
+            <button class="outline-btn" id="btn-menu" type="button" data-i18n="menuBtn">Menu inicial</button>
           </div>
         </div>
 
@@ -124,16 +128,16 @@
     <div class="footer-links">
       <a href="https://ividi.dev/" target="_blank" rel="noopener noreferrer">ividi.dev</a>
       <span class="dot">·</span>
-      <a href="https://github.com/VidiPT89/pacmanHD" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://github.com/VidiPT89/iYellowBallWeb" target="_blank" rel="noopener noreferrer">GitHub</a>
     </div>
   </footer>
 </div>
 
 <div class="modal-overlay is-open" id="intro-overlay">
   <div class="modal intro-modal">
-    <span class="modal-icon">🟡</span>
-    <h2 class="modal-title" data-i18n="introTitle">Pac-Man HD</h2>
-    <p class="modal-text" data-i18n="introText">Um remake moderno do clássico arcade de 1980. Engole o labirinto, foge dos fantasmas e persegue o recorde.</p>
+    <span class="modal-icon ball-icon ball-icon-lg" aria-hidden="true"></span>
+    <h2 class="modal-title" data-i18n="introTitle">iYellowBall</h2>
+    <p class="modal-text" data-i18n="introText">Um labirinto novo em cada nível. Rola a bola amarela, apanha todas as gemas e congela os cubos antes que te apanhem.</p>
     <div class="intro-credit">
       <p class="intro-credit-line">
         <span data-i18n="footerBy">Desenvolvido por</span> <strong>David Arsénio Martins</strong>
@@ -141,23 +145,23 @@
       <div class="intro-links">
         <a href="https://ividi.dev/" target="_blank" rel="noopener noreferrer">ividi.dev</a>
         <span class="dot">·</span>
-        <a href="https://github.com/VidiPT89/pacmanHD" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/VidiPT89/iYellowBallWeb" target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
     </div>
-    <button class="ghost-btn intro-skip" id="intro-play" type="button" data-i18n="introSkipBtn">Saltar</button>
+    <button class="outline-btn intro-skip" id="intro-play" type="button" data-i18n="introSkipBtn">Saltar</button>
     <div class="intro-progress"><span class="intro-progress-fill" id="intro-progress-fill"></span></div>
   </div>
 </div>
 
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <span class="modal-icon">👻</span>
+    <span class="modal-icon">🧊</span>
     <h2 class="modal-title" id="modal-title">Título</h2>
     <p class="modal-text" id="modal-text">Texto</p>
     <div class="modal-stats" id="modal-stats"></div>
     <div class="modal-actions">
       <button class="primary-btn" id="modal-replay" type="button" data-i18n="playAgainBtn">Jogar Novamente</button>
-      <button class="ghost-btn" id="modal-close" type="button" data-i18n="closeBtn">Fechar</button>
+      <button class="outline-btn" id="modal-close" type="button" data-i18n="closeBtn">Fechar</button>
     </div>
   </div>
 </div>
